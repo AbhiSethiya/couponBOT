@@ -1,0 +1,7 @@
+credentials.json
+token.pickle
+coupons.txt
+errors.txt
+__pycache__/
+*.pyc
+venv/

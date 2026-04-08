@@ -1,0 +1,83 @@
+[2026-04-08 11:43] ERROR: Message: 
+
+Traceback (most recent call last):
+  File "C:\Users\HP\PycharmProjects\couponBOT\unidays_scraper.py", line 293, in get_coupon
+    new_code_btn = wait.until(EC.element_to_be_clickable((
+  File "C:\Users\HP\AppData\Local\Programs\Python\Python310\lib\site-packages\selenium\webdriver\support\wait.py", line 121, in until
+    raise TimeoutException(message, screen, stacktrace)
+selenium.common.exceptions.TimeoutException: Message: 
+
+
+──────────────────────────────────────────────────
+[2026-04-08 11:58] ERROR: Message: invalid session id: session deleted as the browser has closed the connection
+from disconnected: not connected to DevTools
+  (Session info: chrome=146.0.7680.178); For documentation on this error, please visit: https://www.selenium.dev/documentation/webdriver/troubleshooting/errors#invalidsessionidexception
+Stacktrace:
+	chromedriver!GetHandleVerifier [0x7ff73ac929c5+2ed785]
+	chromedriver!GetHandleVerifier [0x7ff73a9ba0d0+14e90]
+	chromedriver!(No symbol) [0x7ff73a71db2d]
+	chromedriver!(No symbol) [0x7ff73a708ca2]
+	chromedriver!(No symbol) [0x7ff73a72f416]
+	chromedriver!(No symbol) [0x7ff73a7a70e0]
+	chromedriver!(No symbol) [0x7ff73a7c3482]
+	chromedriver!(No symbol) [0x7ff73a769298]
+	chromedriver!(No symbol) [0x7ff73a76a183]
+	chromedriver!GetHandleVerifier [0x7ff73acbde0d+318bcd]
+	chromedriver!GetHandleVerifier [0x7ff73acb8588+313348]
+	chromedriver!GetHandleVerifier [0x7ff73acd9d7a+334b3a]
+	chromedriver!GetHandleVerifier [0x7ff73a9d6785+31545]
+	chromedriver!GetHandleVerifier [0x7ff73a9dfacc+3a88c]
+	chromedriver!GetHandleVerifier [0x7ff73a9c3634+1e3f4]
+	chromedriver!GetHandleVerifier [0x7ff73a9c37e6+1e5a6]
+	chromedriver!GetHandleVerifier [0x7ff73a9a7e37+2bf7]
+	KERNEL32!BaseThreadInitThunk [0x7ffe4ba87374+14]
+	ntdll!RtlUserThreadStart [0x7ffe4ce5cc91+21]
+
+Traceback (most recent call last):
+  File "C:\Users\HP\PycharmProjects\couponBOT\unidays_scraper.py", line 209, in get_coupon
+    try_enter_otp(driver, wait, otp)
+  File "C:\Users\HP\PycharmProjects\couponBOT\unidays_scraper.py", line 89, in try_enter_otp
+    iframes = driver.find_elements(By.TAG_NAME, "iframe")
+  File "C:\Users\HP\AppData\Local\Programs\Python\Python310\lib\site-packages\selenium\webdriver\remote\webdriver.py", line 847, in find_elements
+    return self.execute(Command.FIND_ELEMENTS, {"using": by, "value": value})["value"] or []
+  File "C:\Users\HP\AppData\Local\Programs\Python\Python310\lib\site-packages\selenium\webdriver\remote\webdriver.py", line 446, in execute
+    self.error_handler.check_response(response)
+  File "C:\Users\HP\AppData\Local\Programs\Python\Python310\lib\site-packages\selenium\webdriver\remote\errorhandler.py", line 232, in check_response
+    raise exception_class(message, screen, stacktrace)
+selenium.common.exceptions.InvalidSessionIdException: Message: invalid session id: session deleted as the browser has closed the connection
+from disconnected: not connected to DevTools
+  (Session info: chrome=146.0.7680.178); For documentation on this error, please visit: https://www.selenium.dev/documentation/webdriver/troubleshooting/errors#invalidsessionidexception
+Stacktrace:
+	chromedriver!GetHandleVerifier [0x7ff73ac929c5+2ed785]
+	chromedriver!GetHandleVerifier [0x7ff73a9ba0d0+14e90]
+	chromedriver!(No symbol) [0x7ff73a71db2d]
+	chromedriver!(No symbol) [0x7ff73a708ca2]
+	chromedriver!(No symbol) [0x7ff73a72f416]
+	chromedriver!(No symbol) [0x7ff73a7a70e0]
+	chromedriver!(No symbol) [0x7ff73a7c3482]
+	chromedriver!(No symbol) [0x7ff73a769298]
+	chromedriver!(No symbol) [0x7ff73a76a183]
+	chromedriver!GetHandleVerifier [0x7ff73acbde0d+318bcd]
+	chromedriver!GetHandleVerifier [0x7ff73acb8588+313348]
+	chromedriver!GetHandleVerifier [0x7ff73acd9d7a+334b3a]
+	chromedriver!GetHandleVerifier [0x7ff73a9d6785+31545]
+	chromedriver!GetHandleVerifier [0x7ff73a9dfacc+3a88c]
+	chromedriver!GetHandleVerifier [0x7ff73a9c3634+1e3f4]
+	chromedriver!GetHandleVerifier [0x7ff73a9c37e6+1e5a6]
+	chromedriver!GetHandleVerifier [0x7ff73a9a7e37+2bf7]
+	KERNEL32!BaseThreadInitThunk [0x7ffe4ba87374+14]
+	ntdll!RtlUserThreadStart [0x7ffe4ce5cc91+21]
+
+
+──────────────────────────────────────────────────
+[2026-04-08 12:00] ERROR: Message: 
+
+Traceback (most recent call last):
+  File "C:\Users\HP\PycharmProjects\couponBOT\unidays_scraper.py", line 293, in get_coupon
+    new_code_btn = wait.until(EC.element_to_be_clickable((
+  File "C:\Users\HP\AppData\Local\Programs\Python\Python310\lib\site-packages\selenium\webdriver\support\wait.py", line 121, in until
+    raise TimeoutException(message, screen, stacktrace)
+selenium.common.exceptions.TimeoutException: Message: 
+
+
+──────────────────────────────────────────────────
