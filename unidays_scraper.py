@@ -111,14 +111,55 @@ def try_enter_otp(driver, wait, otp):
 
 
 def grab_code(driver):
-    for _ in range(10):
+    """Try multiple strategies to find the coupon code on the page."""
+    for attempt in range(15):
         code = driver.execute_script("""
-                let el = document.querySelector('p.mui-1pifstt');
-                return el ? el.innerText.trim() : null;
-            """)
+            var codePattern = /^[A-Z0-9]{4}-[A-Z0-9]{4}-[A-Z0-9]{4}-[A-Z0-9]{4}$/;
+
+            // Strategy 1: Check <input> fields (code is often in an input with Copy button)
+            var inputs = document.querySelectorAll('input');
+            for (var i = 0; i < inputs.length; i++) {
+                var val = (inputs[i].value || '').trim();
+                if (codePattern.test(val)) return val;
+            }
+
+            // Strategy 2: Look for code pattern in <p> elements
+            var allP = document.querySelectorAll('p');
+            for (var j = 0; j < allP.length; j++) {
+                var text = allP[j].innerText.trim();
+                if (codePattern.test(text)) return text;
+            }
+
+            // Strategy 3: Look in <span> elements
+            var allSpan = document.querySelectorAll('span');
+            for (var k = 0; k < allSpan.length; k++) {
+                var text2 = allSpan[k].innerText.trim();
+                if (codePattern.test(text2)) return text2;
+            }
+
+            // Strategy 4: Broad search — any leaf element
+            var allEls = document.querySelectorAll('div, p, span, h1, h2, h3, h4, h5, h6, strong, b, code');
+            for (var m = 0; m < allEls.length; m++) {
+                if (allEls[m].children.length === 0) {
+                    var text3 = allEls[m].innerText.trim();
+                    if (codePattern.test(text3)) return text3;
+                }
+            }
+
+            // Strategy 5: Check data-testid or aria-label elements
+            var dataEl = document.querySelector('[data-testid*="code"]');
+            if (dataEl) {
+                var v = (dataEl.value || dataEl.innerText || '').trim();
+                if (codePattern.test(v)) return v;
+            }
+
+            return null;
+        """)
         if code and len(code) > 5:
             return code
-        time.sleep(1)
+        time.sleep(2)
+        if attempt % 5 == 4:
+            print(f"  grab_code: still searching... (attempt {attempt+1})")
     return None
 
 
@@ -226,16 +267,32 @@ def get_coupon():
             print("Session not established, please run again.")
             return
 
-        # ── Step 6: Click Reveal Code ─────────────────────────────────
-        reveal_btn = wait.until(EC.element_to_be_clickable((
-            By.XPATH, "//button[text()='Reveal code']"
-        )))
-        reveal_btn.click()
+        # ── Step 6: Click Reveal Code (if present) ─────────────────────
+        #    UNiDAYS may show the code directly without a Reveal button
+        try:
+            reveal_btn = WebDriverWait(driver, 8).until(EC.element_to_be_clickable((
+                By.XPATH, "//button[contains(translate(text(),'ABCDEFGHIJKLMNOPQRSTUVWXYZ','abcdefghijklmnopqrstuvwxyz'),'reveal')]"
+            )))
+            reveal_btn.click()
+            print("Clicked 'Reveal code' button.")
+            time.sleep(3)
+        except:
+            print("No 'Reveal code' button found — code may already be showing.")
 
-        # Get the code tab
-        code_tab = get_code_tab(driver, main_window)
-        if code_tab:
-            driver.switch_to.window(code_tab)
+        # Close any extra tabs (like H&M) and stay on UNiDAYS
+        time.sleep(2)
+        for handle in list(driver.window_handles):
+            if handle != main_window:
+                try:
+                    driver.switch_to.window(handle)
+                    time.sleep(1)
+                    if "hm.com" in driver.current_url:
+                        print("Closing H&M tab...")
+                        driver.close()
+                except:
+                    pass
+        driver.switch_to.window(main_window)
+        time.sleep(2)
 
         # ── Step 7: Grab the code ─────────────────────────────────────
         code = grab_code(driver)
@@ -255,46 +312,101 @@ def get_coupon():
         if already_saved:
             print(f"Code {code} already saved, getting new code...")
 
-            # Go back to brand page cleanly
-            ok = navigate_to_brand(driver, main_window)
-            if not ok:
-                print("Could not navigate to brand page.")
-                return
-
+            # The "Get new code" button is on the SAME page — no tab switch needed
             print(f"On page: {driver.current_url}")
-            brand_window = driver.current_window_handle
 
-            # Click Reveal code
-            reveal_btn = wait.until(EC.element_to_be_clickable((
-                By.XPATH, "//button[text()='Reveal code']"
-            )))
-            reveal_btn.click()
-            print("Reveal clicked...")
-            time.sleep(5)
+            # Click Get new code on the UNiDAYS tab — try MULTIPLE strategies
+            new_code_btn = None
 
-            # Find the UNiDAYS ?hrc= tab and switch to it
-            unidays_tab = None
-            for handle in list(driver.window_handles):
+            # Strategy 1: XPath with contains (case-insensitive)
+            try:
+                new_code_btn = WebDriverWait(driver, 10).until(EC.element_to_be_clickable((
+                    By.XPATH, "//button[contains(translate(text(),'ABCDEFGHIJKLMNOPQRSTUVWXYZ','abcdefghijklmnopqrstuvwxyz'),'new code')]"
+                )))
+                print("Found 'Get new code' via XPath contains")
+            except:
+                pass
+
+            # Strategy 2: XPath with various text patterns
+            if not new_code_btn:
+                for text_pattern in ['Get new code', 'Get New Code', 'get new code', 'New code', 'New Code', 'Generate new code', 'Get another code']:
+                    try:
+                        new_code_btn = driver.find_element(By.XPATH, f"//button[contains(text(),'{text_pattern}')]")
+                        if new_code_btn.is_displayed():
+                            print(f"Found button via text: '{text_pattern}'")
+                            break
+                        else:
+                            new_code_btn = None
+                    except:
+                        new_code_btn = None
+
+            # Strategy 3: Check inside child elements (button might contain a span)
+            if not new_code_btn:
                 try:
-                    driver.switch_to.window(handle)
-                    time.sleep(1)
-                    if "myunidays.com" in driver.current_url and "hrc=" in driver.current_url:
-                        unidays_tab = handle
-                        print(f"Found UNiDAYS tab: {driver.current_url}")
-                        break
+                    new_code_btn = driver.find_element(By.XPATH,
+                        "//button[.//span[contains(translate(text(),'ABCDEFGHIJKLMNOPQRSTUVWXYZ','abcdefghijklmnopqrstuvwxyz'),'new code')]]"
+                    )
+                    print("Found 'Get new code' via child span")
                 except:
                     pass
 
-            if not unidays_tab:
-                print("Could not find UNiDAYS code tab.")
+            # Strategy 4: CSS selector with data attributes
+            if not new_code_btn:
+                try:
+                    new_code_btn = driver.find_element(By.CSS_SELECTOR,
+                        "button[data-testid*='new-code'], button[data-testid*='newCode'], button[data-testid*='generate']"
+                    )
+                    print("Found button via data-testid")
+                except:
+                    pass
+
+            # Strategy 5: JavaScript-based search through ALL buttons
+            if not new_code_btn:
+                try:
+                    btn_index = driver.execute_script("""
+                        let buttons = document.querySelectorAll('button, a[role="button"], [role="button"]');
+                        for (let i = 0; i < buttons.length; i++) {
+                            let text = buttons[i].innerText.toLowerCase().trim();
+                            if (text.includes('new code') || text.includes('new_code') || text.includes('generate')) {
+                                return i;
+                            }
+                        }
+                        return -1;
+                    """)
+                    if btn_index >= 0:
+                        buttons = driver.find_elements(By.CSS_SELECTOR, "button, a[role='button'], [role='button']")
+                        new_code_btn = buttons[btn_index]
+                        print(f"Found button via JS scan at index {btn_index}")
+                except:
+                    pass
+
+            # Debug: dump all buttons if none found
+            if not new_code_btn:
+                all_buttons = driver.execute_script("""
+                    let buttons = document.querySelectorAll('button, a[role="button"], [role="button"]');
+                    let result = [];
+                    for (let b of buttons) {
+                        result.push({
+                            tag: b.tagName,
+                            text: b.innerText.trim().substring(0, 100),
+                            classes: b.className.substring(0, 200),
+                            visible: b.offsetParent !== null
+                        });
+                    }
+                    return JSON.stringify(result);
+                """)
+                print(f"DEBUG — All buttons on page: {all_buttons}")
+                print(f"DEBUG — Page URL: {driver.current_url}")
+                print("Could not find 'Get new code' button with any strategy.")
                 return
 
-            # Click Get new code on the UNiDAYS tab
-            new_code_btn = wait.until(EC.element_to_be_clickable((
-                By.XPATH, "//button[text()='Get new code']"
-            )))
             print("Clicking Get new code...")
-            driver.execute_script("arguments[0].click();", new_code_btn)
+            try:
+                driver.execute_script("arguments[0].scrollIntoView({block: 'center'});", new_code_btn)
+                time.sleep(0.5)
+                driver.execute_script("arguments[0].click();", new_code_btn)
+            except:
+                ActionChains(driver).move_to_element(new_code_btn).click().perform()
             print("Clicked! Waiting for new code...")
             time.sleep(6)
 
@@ -303,17 +415,6 @@ def get_coupon():
                 time.sleep(2)
                 new_code = grab_code(driver)
                 print(f"Polling... got: {new_code}")
-                if new_code and new_code != code:
-                    code = new_code
-                    print(f"New code found: {code}")
-                    break
-            else:
-                code = grab_code(driver)
-
-            # Poll until code changes
-            for _ in range(10):
-                time.sleep(2)
-                new_code = grab_code(driver)
                 if new_code and new_code != code:
                     code = new_code
                     print(f"New code found: {code}")
